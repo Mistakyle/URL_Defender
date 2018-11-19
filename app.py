@@ -2,15 +2,12 @@ from flask import Flask, render_template, url_for, request, session, redirect
 from flask_pymongo import PyMongo
 import bcrypt
 import config
+import sys
+import vt
 
 # can grab link, now need to begin implementing apis and stuff to do calculation
-
 app = Flask(__name__)
-
-app.config['MONGO_DBNAME'] = config.name
-app.config['MONGO_URI'] = config.url
-
-mongo = PyMongo(app)
+mongo = config.connect(app)
 
 
 @app.route('/')
@@ -52,12 +49,18 @@ def register():
 
     return render_template('register.html')
 
+#TODO: fix how the rendering is not actually displaying the message 
 @app.route('/url', methods=['POST','GET'])
 # method name should be same as route name so do not get confused with html
 def url():
     if request.method=='POST':
         if request.form['url']:
-            return 'You entered ' + request.form['url']
+            viruses = vt.vt_urlscan(request.form['url'])
+            if viruses==0:
+                render_template("url.html", message = "This url showed " + str(viruses) + " threats")
+            else:
+                return "DO NOT VISIT THIS SITE"
+
 
     return render_template('url.html')
 
