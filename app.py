@@ -4,6 +4,7 @@ import bcrypt
 import config
 import sys
 import vt
+import util as master
 
 # can grab link, now need to begin implementing apis and stuff to do calculation
 app = Flask(__name__)
@@ -49,20 +50,30 @@ def register():
 
     return render_template('register.html')
 
-#TODO: fix how the rendering is not actually displaying the message 
+#TODO: fix how the rendering is not actually displaying the message
 @app.route('/url', methods=['POST','GET'])
 # method name should be same as route name so do not get confused with html
 def url():
+    url = mongo.db.urls
+
+    if request.method == 'GET':
+        return render_template('url.html')
+
     if request.method=='POST':
         if request.form['url']:
-            viruses = vt.vt_urlscan(request.form['url'])
-            if viruses==0:
-                render_template("url.html", message = "This url showed " + str(viruses) + " threats")
-            else:
-                return "DO NOT VISIT THIS SITE"
+            if url.find_one({'url': request.form['url']}) is None:
+            # check if url exists in url DB, if so report result otherwise send to scan
+            # after scans add url user and result
+                score = master.performScan(request.form['url'])
+                url.insert({'url': request.form['url'], 'user': session["username"], 'score': score })
+
+            score = url.find_one({'url':request.form['url']})["score"]
+            if score == 0:
+                return render_template('url.html') #give result based on score entry
 
 
-    return render_template('url.html')
+            return "VIRUS ALERT"
+
 
 
 if __name__ == '__main__':
