@@ -72,7 +72,12 @@ def url():
                 return render_template('url.html') #give result based on score entry
 
 
-            return "VIRUS ALERT"
+            return redirect(url_for('virus'))
+
+@app.route('/virus', methods=['POST','GET'])
+def virus():
+    return render_template('virus.html')            
+
 
 
 
