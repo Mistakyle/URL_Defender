@@ -14,7 +14,7 @@ mongo = config.connect(app)
 @app.route('/')
 def index():
     if 'username' in session:
-        return 'You are logged in as ' + session['username']
+        return redirect(url_for('url'))
 
     return render_template('index.html')
 
@@ -54,6 +54,8 @@ def register():
 @app.route('/url', methods=['POST','GET'])
 # method name should be same as route name so do not get confused with html
 def url():
+    if 'username' not in session:
+        return redirect(url_for('index'))
     url = mongo.db.urls
 
     if request.method == 'GET':
@@ -69,14 +71,19 @@ def url():
 
             score = url.find_one({'url':request.form['url']})["score"]
             if score == 0:
-                return render_template('url.html') #give result based on score entry
+                return redirect(url_for('clean')) #give result based on score entry
 
 
             return redirect(url_for('virus'))
 
 @app.route('/virus', methods=['POST','GET'])
 def virus():
-    return render_template('virus.html')            
+    return render_template('virus.html')
+
+@app.route('/clean', methods=['POST','GET'])
+def clean():
+    return render_template('clean.html')
+
 
 
 
